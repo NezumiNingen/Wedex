@@ -2,6 +2,10 @@
 
 wedex is an independent, open-source desktop client for working with local folders through the official Codex CLI. It uses Tauri 2, React, TypeScript, and Rust—there is no Electron layer and no wedex cloud service.
 
+> **[↓ 下载 wedex for macOS（Apple Silicon）](https://github.com/NezumiNingen/Wedex/releases/download/v0.1.0/wedex_0.1.0_aarch64.dmg)**
+>
+> 适用于 M1 / M2 / M3 / M4 Mac。安装后仍需自行安装并登录官方 Codex CLI。
+
 ## What it does
 
 - Runs the locally installed Codex CLI inside a selected project directory.
