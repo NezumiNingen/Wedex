@@ -6,6 +6,8 @@ wedex is an independent, open-source desktop client for working with local folde
 >
 > 适用于 M1 / M2 / M3 / M4 Mac。安装后仍需自行安装并登录官方 Codex CLI。
 
+也可以选择 **Code → Download ZIP**：解压后，安装包位于 `installer/wedex_0.1.0_aarch64.dmg`。
+
 ## What it does
 
 - Runs the locally installed Codex CLI inside a selected project directory.
