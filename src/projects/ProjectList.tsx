@@ -27,6 +27,11 @@ export function ProjectList() {
   const tr = (key: Parameters<typeof t>[1]) => t(settings.language, key);
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState<{ kind: 'project' | 'session'; id: string; value: string } | null>(null);
+  const [projectCreatorOpen, setProjectCreatorOpen] = useState(false);
+  const [projectAddMenuOpen, setProjectAddMenuOpen] = useState(false);
+  const [projectDraft, setProjectDraft] = useState('');
+  const [projectError, setProjectError] = useState('');
+  const [creatingProject, setCreatingProject] = useState(false);
   const projectMode = view === 'projects';
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
 
@@ -46,18 +51,39 @@ export function ProjectList() {
   );
 
   const chooseExistingProject = async () => {
+    setProjectAddMenuOpen(false);
     const path = await open({ directory: true, multiple: false, title: tr('chooseExistingProject') });
     if (typeof path === 'string') addProject(path);
   };
 
+  const openProjectCreator = () => {
+    setProjectAddMenuOpen(false);
+    setProjectError('');
+    setProjectDraft('');
+    setProjectCreatorOpen(true);
+  };
+
+  const closeProjectCreator = () => {
+    if (creatingProject) return;
+    setProjectCreatorOpen(false);
+    setProjectDraft('');
+    setProjectError('');
+  };
+
   const createProject = async () => {
-    const name = window.prompt(tr('projectName'));
-    if (!name?.trim()) return;
+    const name = projectDraft.trim();
+    if (!name || creatingProject) return;
+    setCreatingProject(true);
+    setProjectError('');
     try {
       const path = await invoke<string>('create_default_project', { name });
       addProject(path);
+      setProjectCreatorOpen(false);
+      setProjectDraft('');
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : String(error));
+      setProjectError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setCreatingProject(false);
     }
   };
 
@@ -73,7 +99,6 @@ export function ProjectList() {
     }
   };
 
-  const create = projectMode ? createProject : createConversation;
   const beginRename = (kind: 'project' | 'session', id: string, value: string) => setEditing({ kind, id, value });
   const commitRename = () => {
     if (!editing) return;
@@ -94,14 +119,37 @@ export function ProjectList() {
             onChange={(event) => setQuery(event.target.value)}
           />
         </div>
-        <IconButton
-          title={projectMode ? tr('addProject') : tr('addConversation')}
-          className="new-project"
-          onClick={() => void create()}
-        >
-          <Plus size={25}/>
-        </IconButton>
+        <div className="project-add-action">
+          <IconButton
+            title={projectMode ? tr('addProject') : tr('addConversation')}
+            className="new-project"
+            onClick={() => projectMode ? setProjectAddMenuOpen((open) => !open) : void createConversation()}
+          >
+            <Plus size={25}/>
+          </IconButton>
+          {projectMode && projectAddMenuOpen && <div className="project-add-menu">
+            <button type="button" onClick={openProjectCreator}>{tr('createProject')}</button>
+            <button type="button" onClick={() => void chooseExistingProject()}>{tr('addExistingProject')}</button>
+          </div>}
+        </div>
       </header>
+
+      {projectMode && projectCreatorOpen && <div className="project-create-panel">
+        <label>{tr('createProject')}</label>
+        <input
+          autoFocus
+          value={projectDraft}
+          placeholder={tr('projectNamePlaceholder')}
+          aria-label={tr('projectName')}
+          onChange={(event) => setProjectDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') void createProject();
+            if (event.key === 'Escape') closeProjectCreator();
+          }}
+        />
+        {projectError && <p role="alert">{projectError}</p>}
+        <div><button type="button" onClick={closeProjectCreator}>{tr('cancel')}</button><button type="button" disabled={!projectDraft.trim() || creatingProject} onClick={() => void createProject()}>{tr('create')}</button></div>
+      </div>}
 
       <div className="project-scroll">
         {projectMode ? (
@@ -109,7 +157,7 @@ export function ProjectList() {
             <div className="list-empty">
               {tr('noProjects')}
               <br/>
-              <button onClick={() => void createProject()}>{tr('createInDownloads')}</button>
+              <button onClick={openProjectCreator}>{tr('createInDownloads')}</button>
               <button onClick={() => void chooseExistingProject()}>{tr('addExistingProject')}</button>
             </div>
           ) : projectRows.map((project) => {
