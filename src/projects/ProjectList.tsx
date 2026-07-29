@@ -1,10 +1,12 @@
 import { MoreHorizontal, Plus, Search } from 'lucide-react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IconButton } from '../components/IconButton';
 import { useAppStore } from '../stores/appStore';
 import { t } from '../lib/i18n';
+
+type ContextTarget = { kind: 'project' | 'session'; id: string; name: string; top: number };
 
 export function ProjectList() {
   const {
@@ -21,6 +23,7 @@ export function ProjectList() {
     renameProject,
     renameSession,
     removeProject,
+    removeSession,
     status,
     settings,
   } = useAppStore();
@@ -32,8 +35,18 @@ export function ProjectList() {
   const [projectDraft, setProjectDraft] = useState('');
   const [projectError, setProjectError] = useState('');
   const [creatingProject, setCreatingProject] = useState(false);
+  const [contextTarget, setContextTarget] = useState<ContextTarget | null>(null);
   const projectMode = view === 'projects';
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
+
+  useEffect(() => {
+    const close = () => setContextTarget(null);
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') close(); };
+    window.addEventListener('click', close);
+    window.addEventListener('blur', close);
+    window.addEventListener('keydown', escape);
+    return () => { window.removeEventListener('click', close); window.removeEventListener('blur', close); window.removeEventListener('keydown', escape); };
+  }, []);
 
   const projectRows = useMemo(
     () => projects
@@ -100,6 +113,27 @@ export function ProjectList() {
   };
 
   const beginRename = (kind: 'project' | 'session', id: string, value: string) => setEditing({ kind, id, value });
+  const openContextMenu = (row: HTMLElement, kind: 'project' | 'session', id: string, name: string) => {
+    const list = row.closest('.project-list') as HTMLElement | null;
+    if (!list) return;
+    const listRect = list.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    const scale = listRect.height / list.offsetHeight || 1;
+    const top = Math.min((rowRect.bottom - listRect.top) / scale, list.offsetHeight - 92);
+    setContextTarget({ kind, id, name, top: Math.max(8, top) });
+  };
+  const renameFromContext = () => {
+    if (!contextTarget) return;
+    beginRename(contextTarget.kind, contextTarget.id, contextTarget.name);
+    setContextTarget(null);
+  };
+  const deleteFromContext = () => {
+    if (!contextTarget) return;
+    if (contextTarget.kind === 'project') {
+      if (window.confirm(tr('confirmDeleteProject'))) removeProject(contextTarget.id);
+    } else if (window.confirm(tr('confirmDeleteConversation'))) removeSession(contextTarget.id);
+    setContextTarget(null);
+  };
   const commitRename = () => {
     if (!editing) return;
     if (editing.kind === 'project') renameProject(editing.id, editing.value);
@@ -151,7 +185,7 @@ export function ProjectList() {
         <div><button type="button" onClick={closeProjectCreator}>{tr('cancel')}</button><button type="button" disabled={!projectDraft.trim() || creatingProject} onClick={() => void createProject()}>{tr('create')}</button></div>
       </div>}
 
-      <div className="project-scroll">
+      <div className="project-scroll" onScroll={() => setContextTarget(null)}>
         {projectMode ? (
           projectRows.length === 0 ? (
             <div className="list-empty">
@@ -169,7 +203,8 @@ export function ProjectList() {
                 onClick={() => select(project.id)}
                 onContextMenu={(event) => {
                   event.preventDefault();
-                  beginRename('project', project.id, project.name);
+                  event.stopPropagation();
+                  openContextMenu(event.currentTarget, 'project', project.id, project.name);
                 }}
               >
                 <div className="avatar">{project.name.slice(0, 1).toUpperCase()}</div>
@@ -184,10 +219,11 @@ export function ProjectList() {
                 </div>
                 <div className="row-menu">
                   <IconButton
-                    title={tr('removeProject')}
+                    title={tr('moreActions')}
                     onClick={(event) => {
                       event.stopPropagation();
-                      removeProject(project.id);
+                      const row = event.currentTarget.closest('.project-row') as HTMLElement | null;
+                      if (row) openContextMenu(row, 'project', project.id, project.name);
                     }}
                   >
                     <MoreHorizontal size={16}/>
@@ -221,7 +257,8 @@ export function ProjectList() {
               onClick={() => select(selectedProject.id, session.id)}
               onContextMenu={(event) => {
                 event.preventDefault();
-                beginRename('session', session.id, session.title);
+                event.stopPropagation();
+                openContextMenu(event.currentTarget, 'session', session.id, session.title);
               }}
             >
               <div className="avatar">{selectedProject.name.slice(0, 1).toUpperCase()}</div>
@@ -236,6 +273,10 @@ export function ProjectList() {
           );
         })}
       </div>
+      {contextTarget && <div className="row-context-menu" style={{ top: contextTarget.top }} onClick={(event) => event.stopPropagation()}>
+        <button type="button" onClick={renameFromContext}>{tr('rename')}</button>
+        <button type="button" className="danger" onClick={deleteFromContext}>{contextTarget.kind === 'project' ? tr('deleteProject') : tr('deleteConversation')}</button>
+      </div>}
     </aside>
   );
 }
