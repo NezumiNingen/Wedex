@@ -66,3 +66,52 @@
 
 /* Light mode keeps the same dense, familiar desktop messenger hierarchy. */
 :root[data-theme="light"] .app-shell{background:#f5f5f5}:root[data-theme="light"] .nav-rail{background:#ececed;color:#7d7f82}:root[data-theme="light"] .icon-button:hover,:root[data-theme="light"] .icon-button.active{background:#dadbdd;color:#222}:root[data-theme="light"] .project-list{background:#f7f7f7;border-color:#e6e6e6}:root[data-theme="light"] .search{background:#e9e9e9;border:0}:root[data-theme="light"] .list-actions>button:first-child,:root[data-theme="light"] .list-actions .icon-button{border-color:#e5e5e5}:root[data-theme="light"] .project-row{border-bottom:1px solid #eee}:root[data-theme="light"] .project-row:hover{background:#ececec}:root[data-theme="light"] .project-row.selected{background:#dcdcdc;border-left-color:#3a9c79}:root[data-theme="light"] .chat,:root[data-theme="light"] .chat-header,:root[data-theme="light"] .composer{background:#f5f5f5}:root[data-theme="light"] .chat-header{border-color:#e8e8e8}:root[data-theme="light"] .chat-header h2{font-size:18px}:root[data-theme="light"] .composer{border-color:#e1e1e1;padding:12px 16px 15px}:root[data-theme="light"] .composer textarea{min-height:86px}:root[data-theme="light"] .bubble{border:0}:root[data-theme="light"] .user-message .bubble{background:#95ec69;border-color:#95ec69}
+
+/* Reference-calibrated desktop messenger planes and shapes. */
+:root[data-theme="dark"] .nav-rail{background:#252628;color:#aeb0b5}:root[data-theme="dark"] .project-list{background:#2f2f30;border-right-color:#29292b}:root[data-theme="dark"] .project-row{border-bottom-color:#38383a}:root[data-theme="dark"] .project-row:hover{background:#3b3b3d}:root[data-theme="dark"] .project-row.selected{background:#4ca56e;border-left-color:#4ca56e}:root[data-theme="dark"] .chat,:root[data-theme="dark"] .chat-header,:root[data-theme="dark"] .composer{background:#1e1e1f}:root[data-theme="dark"] .chat-header{border-bottom-color:#29292b}:root[data-theme="dark"] .search{background:#3b3b3d;color:#a3a3a7}:root[data-theme="dark"] .bubble{background:#303032;color:#f0f0f2;border-radius:10px}:root[data-theme="dark"] .message:not(.user-message) .bubble:before{color:#303032}:root[data-theme="dark"] .user-message .bubble,:root[data-theme="dark"] .user-message .bubble:after{background:#2fc98b;border-color:#2fc98b;color:#14241c}:root[data-theme="dark"] .composer{border-color:#39393b;border-radius:13px}:root[data-theme="dark"] .project-row .avatar,:root[data-theme="dark"] .mini-avatar{border-radius:8px}
+@media(prefers-color-scheme:dark){:root[data-theme="system"] .nav-rail{background:#252628;color:#aeb0b5}:root[data-theme="system"] .project-list{background:#2f2f30;border-right-color:#29292b}:root[data-theme="system"] .project-row{border-bottom-color:#38383a}:root[data-theme="system"] .project-row:hover{background:#3b3b3d}:root[data-theme="system"] .project-row.selected{background:#4ca56e;border-left-color:#4ca56e}:root[data-theme="system"] .chat,:root[data-theme="system"] .chat-header,:root[data-theme="system"] .composer{background:#1e1e1f}:root[data-theme="system"] .chat-header{border-bottom-color:#29292b}:root[data-theme="system"] .search{background:#3b3b3d;color:#a3a3a7}:root[data-theme="system"] .bubble{background:#303032;color:#f0f0f2;border-radius:10px}:root[data-theme="system"] .message:not(.user-message) .bubble:before{color:#303032}:root[data-theme="system"] .user-message .bubble,:root[data-theme="system"] .user-message .bubble:after{background:#2fc98b;border-color:#2fc98b;color:#14241c}:root[data-theme="system"] .composer{border-color:#39393b;border-radius:13px}:root[data-theme="system"] .project-row .avatar,:root[data-theme="system"] .mini-avatar{border-radius:8px}}
+
+/* The macOS traffic lights live in this column; keep it visibly wider than their control group. */
+.app-shell{grid-template-columns:70px 380px minmax(0,1fr)}
+
+/* Custom macOS-style controls stay inside the left rail instead of the native title bar. */
+html,body,#root{width:100%;height:100%;background:transparent}.app-shell{position:relative;grid-template-columns:82px 380px minmax(0,1fr);border:4px solid #303235;border-radius:22px;overflow:hidden}.window-drag-strip{position:absolute;z-index:8;left:82px;right:0;top:0;height:18px}.nav-rail{padding-top:0}.window-controls{position:relative;z-index:9;height:132px;width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:0;padding:20px 10px;flex:none}.window-controls button{width:clamp(14px,calc((100% - 20px)/3),20px);height:auto;aspect-ratio:1;flex:none;display:grid;place-items:center;border-radius:50%;background:#9da3a5;padding:0;overflow:hidden}.window-controls button svg{width:62%;height:62%;stroke:#3e4244;stroke-width:2;opacity:0;pointer-events:none}.window-controls:hover button svg,.window-controls button:focus-visible svg{opacity:1}.window-controls button:hover{filter:brightness(1.14)}.window-controls .window-close{background:#a4aaac}.window-controls .window-minimize{background:#9da1a2}.window-controls .window-maximize{background:#999fa1}.project-list header{display:flex;align-items:center;gap:12px}.project-list header .search{height:45px;flex:1}.project-list header .search input{font-size:16px}.project-list header .new-project{width:45px;height:45px;flex:none}
+
+/* Keep all four frameless-window corners visibly and consistently rounded. */
+.app-shell{border-radius:34px;clip-path:inset(0 round 34px)}
+
+/* Remove the webview's rectangular corner layer as well as the app content corners. */
+html,body,#root{border-radius:26px;overflow:hidden;background-color:transparent!important}
+
+/* On short windows, only the scrollable middle planes shrink; headers and composer stay visible. */
+.app-shell{grid-template-rows:minmax(0,1fr);min-height:0}
+.chat,.project-list,.nav-rail{height:100%;min-height:0;max-height:100%;overflow:hidden}
+.project-scroll{flex:1;min-height:0;overflow-y:auto}
+.message-area{min-height:0;overflow-y:auto;justify-content:flex-start}
+.message-area:before{content:"";margin-top:auto}
+.composer{position:relative;z-index:2;flex:none}
+.nav-spacer{min-height:0}
+
+/* Align the rail avatar and following icons with the first project row. */
+.window-controls{height:42px}
+
+/* The newest reply stays immediately above the composer; only older history scrolls upward. */
+.message-area{overflow-anchor:none;scroll-behavior:auto}
+.message-area>.message:last-child{margin-bottom:0}
+
+/* Keep the add action visually secondary to the taller search field. */
+.project-list header .new-project{width:38px;height:38px}
+.project-list header .new-project svg{width:20px;height:20px}
+
+/* Consistent instant labels for icon actions throughout the app. */
+button[data-tooltip]{position:relative}
+button[data-tooltip]:after{content:attr(data-tooltip);position:absolute;z-index:40;left:50%;bottom:calc(100% + 8px);transform:translate(-50%,4px);pointer-events:none;white-space:nowrap;border-radius:5px;padding:5px 8px;background:#171719;color:#f2f2f3;font-size:12px;line-height:1;box-shadow:0 2px 8px #0005;opacity:0;visibility:hidden;transition:opacity .12s ease,transform .12s ease}
+button[data-tooltip]:hover:after,button[data-tooltip]:focus-visible:after{opacity:1;visibility:visible;transform:translate(-50%,0)}
+.project-list header button[data-tooltip]:after{top:calc(100% + 8px);bottom:auto}
+
+/* Rail labels extend into the list column and remain visible after a click. */
+.nav-rail{overflow:visible}
+.nav-rail [data-tooltip]:focus:after{opacity:1;visibility:visible;transform:translateY(-50%) translateX(0)}
+
+.inline-rename{min-width:0;flex:1;border:1px solid #6b6d70;border-radius:4px;padding:2px 5px;background:#222325;color:inherit;font:inherit;line-height:1.3}
+.resize-handle{position:absolute;z-index:60;background:transparent}.resize-n,.resize-s{left:16px;right:16px;height:14px}.resize-n{top:0;cursor:ns-resize}.resize-s{bottom:0;cursor:ns-resize}.resize-e,.resize-w{top:16px;bottom:16px;width:14px}.resize-e{right:0;cursor:ew-resize}.resize-w{left:0;cursor:ew-resize}.resize-ne,.resize-nw,.resize-se,.resize-sw{width:22px;height:22px}.resize-ne{right:0;top:0;cursor:nesw-resize}.resize-nw{left:0;top:0;cursor:nwse-resize}.resize-se{right:0;bottom:0;cursor:nwse-resize}.resize-sw{left:0;bottom:0;cursor:nesw-resize}

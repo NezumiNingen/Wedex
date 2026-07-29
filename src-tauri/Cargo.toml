@@ -9,6 +9,10 @@ edition = "2021"
 name = "wedex_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
 
+[features]
+default = ["macos-private-api"]
+macos-private-api = ["tauri/macos-private-api"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 

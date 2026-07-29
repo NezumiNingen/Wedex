@@ -9,7 +9,7 @@ use std::{
     thread,
     time::Duration,
 };
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 #[derive(Clone, Serialize)]
 pub struct CliStatus {
     installed: bool,
@@ -67,6 +67,67 @@ pub fn create_project_directory(parent: String, name: String) -> Result<String, 
         .canonicalize()
         .map(|path| path.to_string_lossy().into_owned())
         .map_err(|error| format!("无法确认项目目录: {error}"))
+}
+
+fn checked_name<'a>(name: &'a str, kind: &str) -> Result<&'a str, String> {
+    let safe_name = name.trim();
+    if safe_name.is_empty()
+        || safe_name == "."
+        || safe_name == ".."
+        || safe_name.contains(['/', '\\'])
+    {
+        return Err(format!("{kind}名称不能为空，且不能包含路径分隔符。"));
+    }
+    Ok(safe_name)
+}
+
+fn wedex_download_root(app: &AppHandle) -> Result<PathBuf, String> {
+    let downloads = app
+        .path()
+        .download_dir()
+        .map_err(|error| format!("无法获取下载目录: {error}"))?;
+    let root = downloads.join("wedex");
+    fs::create_dir_all(&root).map_err(|error| format!("无法创建 wedex 目录: {error}"))?;
+    Ok(root)
+}
+
+#[tauri::command]
+pub fn ensure_wedex_root(app: AppHandle) -> Result<String, String> {
+    wedex_download_root(&app).map(|path| path.to_string_lossy().into_owned())
+}
+
+#[tauri::command]
+pub fn create_default_project(app: AppHandle, name: String) -> Result<String, String> {
+    let safe_name = checked_name(&name, "项目")?;
+    let project_path = wedex_download_root(&app)?.join(safe_name);
+    if project_path.exists() {
+        return Err("同名项目已经存在。".into());
+    }
+    fs::create_dir_all(&project_path).map_err(|error| format!("无法创建项目目录: {error}"))?;
+    project_path
+        .canonicalize()
+        .map(|path| path.to_string_lossy().into_owned())
+        .map_err(|error| format!("无法确认项目目录: {error}"))
+}
+
+#[tauri::command]
+pub fn create_session_directory(
+    project_path: String,
+    session_id: String,
+) -> Result<String, String> {
+    let safe_session = checked_name(&session_id, "子对话")?;
+    let project = Path::new(&project_path);
+    if !project.is_dir() {
+        return Err("项目目录不存在或不可访问。".into());
+    }
+    // Conversation metadata is kept separate from project source files while
+    // remaining inside the project directory.
+    let session_path = project
+        .join(".wedex")
+        .join("conversations")
+        .join(safe_session);
+    fs::create_dir_all(&session_path).map_err(|error| format!("无法创建子对话目录: {error}"))?;
+    Ok(session_path.to_string_lossy().into_owned())
 }
 #[tauri::command]
 pub fn start_codex_task(
