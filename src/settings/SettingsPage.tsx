@@ -1,8 +1,41 @@
 import { Database, Download, Moon, ShieldCheck, SlidersHorizontal, Sun } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { open } from '@tauri-apps/plugin-dialog';
 import { useAppStore } from '../stores/appStore';
 import { t } from '../lib/i18n';
 import { cliAdapter } from '../services/codexAdapter';
-import { useEffect, useState } from 'react';
-import { open } from '@tauri-apps/plugin-dialog';
-export function SettingsPage() { const { settings, updateSettings } = useAppStore(); const tr = (key: Parameters<typeof t>[1]) => t(settings.language, key); const [cliState, setCliState] = useState<{ installed: boolean; text: string }>({ installed: false, text: '正在检测 Codex CLI…' }); const chooseCli = async () => { const path = await open({ multiple: false, directory: false, title: '选择 Codex CLI 可执行文件' }); if (typeof path === 'string') updateSettings({ cliPath: path }); }; useEffect(() => { void cliAdapter.check(settings.cliPath).then((result) => setCliState({ installed: result.installed, text: result.installed ? `已发现 ${result.version ?? 'Codex CLI'}` : result.error ?? '未发现 Codex CLI' })).catch(() => setCliState({ installed: false, text: '无法检测 Codex CLI' })); }, [settings.cliPath]); return <main className="settings-page"><header><SlidersHorizontal size={22}/><div><h1>{tr('settings')}</h1><p>本地偏好设置会保存在应用数据库中。</p></div></header><section><h3>Codex</h3><p className={`cli-status ${cliState.installed ? 'ready' : 'missing'}`}>{cliState.text}</p><label>运行模式<select value={settings.adapter} onChange={(e) => updateSettings({ adapter: e.target.value as 'mock' | 'cli' })}><option value="mock">Mock Codex（推荐开发体验）</option><option value="cli">Codex CLI</option></select></label><label>默认模型<input value={settings.model} onChange={(e) => updateSettings({ model: e.target.value })}/></label><label className="cli-path">CLI 路径<span><input value={settings.cliPath} onChange={(e) => updateSettings({ cliPath: e.target.value })}/><button type="button" onClick={() => void chooseCli()}>选择程序</button></span></label><label>默认权限<select value={settings.permission} onChange={(e) => updateSettings({ permission: e.target.value as typeof settings.permission })}><option value="read-only">只读</option><option value="workspace-write">工作区写入</option><option value="full-access">完全访问</option></select></label></section><section><h3>{tr('appearance')}</h3><label>{tr('language')}<select value={settings.language ?? 'zh-CN'} onChange={(e) => updateSettings({ language: e.target.value as 'zh-CN' | 'en-US' })}><option value="zh-CN">{tr('chinese')}</option><option value="en-US">{tr('english')}</option></select></label><label>主题<select value={settings.theme} onChange={(e) => updateSettings({ theme: e.target.value as typeof settings.theme })}><option value="system">跟随系统</option><option value="light">浅色 <Sun size={13}/></option><option value="dark">深色 <Moon size={13}/></option></select></label><label>字体大小<input type="range" min="12" max="18" value={settings.fontSize} onChange={(e) => updateSettings({ fontSize: Number(e.target.value) })}/>{settings.fontSize}px</label><Toggle label="完成任务时发送系统通知" checked={settings.notifications} onChange={(notifications) => updateSettings({ notifications })}/><Toggle label="自动滚动到最新消息" checked={settings.autoScroll} onChange={(autoScroll) => updateSettings({ autoScroll})}/><Toggle label="紧凑消息布局" checked={settings.compact} onChange={(compact) => updateSettings({ compact })}/></section><section><h3>数据与隐私</h3><p className="muted"><Database size={15}/> 项目、会话和消息仅保存在本机浏览器存储中。不会上传项目内容，也不会读取或保存 Codex 登录凭证。</p><div className="settings-buttons"><button><Download size={16}/>导出会话</button><button className="danger"><ShieldCheck size={16}/>清除缓存</button></div></section></main>; }
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange(value: boolean): void }) { return <label className="toggle-row">{label}<input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)}/></label>; }
+
+export function SettingsPage() {
+  const { settings, updateSettings } = useAppStore();
+  const tr = (key: Parameters<typeof t>[1]) => t(settings.language, key);
+  const [cliState, setCliState] = useState({ installed: false, text: t(settings.language, 'detectingCli') });
+
+  const chooseCli = async () => {
+    const path = await open({ multiple: false, directory: false, title: tr('chooseCli') });
+    if (typeof path === 'string') updateSettings({ cliPath: path });
+  };
+
+  useEffect(() => {
+    void cliAdapter.check(settings.cliPath)
+      .then((result) => setCliState({ installed: result.installed, text: result.installed ? `${t(settings.language, 'cliFound')} ${result.version ?? 'Codex CLI'}` : result.error ?? t(settings.language, 'cliNotFound') }))
+      .catch(() => setCliState({ installed: false, text: t(settings.language, 'cliUnavailable') }));
+  }, [settings.cliPath, settings.language]);
+
+  return <main className="settings-page"><header><SlidersHorizontal size={22}/><div><h1>{tr('settings')}</h1><p>{tr('settingsIntro')}</p></div></header>
+    <section><h3>Codex</h3><p className={`cli-status ${cliState.installed ? 'ready' : 'missing'}`}>{cliState.text}</p>
+      <label>{tr('runMode')}<select value={settings.adapter} onChange={(event) => updateSettings({ adapter: event.target.value as 'mock' | 'cli' })}><option value="mock">{tr('mockMode')}</option><option value="cli">Codex CLI</option></select></label>
+      <label>{tr('defaultModel')}<input value={settings.model} onChange={(event) => updateSettings({ model: event.target.value })}/></label>
+      <label className="cli-path">{tr('cliPath')}<span><input value={settings.cliPath} onChange={(event) => updateSettings({ cliPath: event.target.value })}/><button type="button" onClick={() => void chooseCli()}>{tr('chooseProgram')}</button></span></label>
+      <label>{tr('defaultPermission')}<select value={settings.permission} onChange={(event) => updateSettings({ permission: event.target.value as typeof settings.permission })}><option value="read-only">{tr('readOnly')}</option><option value="workspace-write">{tr('workspaceWrite')}</option><option value="full-access">{tr('fullAccess')}</option></select></label>
+    </section>
+    <section><h3>{tr('appearance')}</h3>
+      <label>{tr('language')}<select value={settings.language ?? 'zh-CN'} onChange={(event) => updateSettings({ language: event.target.value as 'zh-CN' | 'en-US' })}><option value="zh-CN">{tr('chinese')}</option><option value="en-US">{tr('english')}</option></select></label>
+      <label>{tr('theme')}<select value={settings.theme} onChange={(event) => updateSettings({ theme: event.target.value as typeof settings.theme })}><option value="system">{tr('system')}</option><option value="light">{tr('light')} <Sun size={13}/></option><option value="dark">{tr('dark')} <Moon size={13}/></option></select></label>
+      <label>{tr('fontSize')}<input type="range" min="12" max="18" value={settings.fontSize} onChange={(event) => updateSettings({ fontSize: Number(event.target.value) })}/>{settings.fontSize}px</label>
+      <Toggle label={tr('sendNotification')} checked={settings.notifications} onChange={(notifications) => updateSettings({ notifications })}/><Toggle label={tr('autoScroll')} checked={settings.autoScroll} onChange={(autoScroll) => updateSettings({ autoScroll })}/><Toggle label={tr('compactLayout')} checked={settings.compact} onChange={(compact) => updateSettings({ compact })}/>
+    </section>
+    <section><h3>{tr('privacy')}</h3><p className="muted"><Database size={15}/>{tr('privacyIntro')}</p><div className="settings-buttons"><button><Download size={16}/>{tr('exportChats')}</button><button className="danger"><ShieldCheck size={16}/>{tr('clearCache')}</button></div></section>
+  </main>;
+}
+
+function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange(value: boolean): void }) { return <label className="toggle-row">{label}<input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)}/></label>; }
