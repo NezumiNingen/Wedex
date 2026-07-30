@@ -9,12 +9,15 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
             commands::check_codex,
+            commands::check_kimi,
             commands::create_project_directory,
             commands::ensure_wedex_root,
             commands::create_default_project,
             commands::create_session_directory,
             commands::start_codex_task,
-            commands::cancel_codex_task
+            commands::start_kimi_task,
+            commands::cancel_codex_task,
+            commands::cancel_kimi_task
         ])
         .setup(|app| {
             if let Some(window) = app.get_webview_window("main") {

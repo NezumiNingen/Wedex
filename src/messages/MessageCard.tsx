@@ -11,7 +11,7 @@ export function MessageCard({ message }: { message: Message }) {
   const { settings } = useAppStore();
   const tr = (key: Parameters<typeof t>[1]) => t(settings.language, key);
   const copy = () => void navigator.clipboard.writeText(message.content);
-  const avatar = (kind: 'user' | 'assistant') => { const source = kind === 'user' ? settings.userAvatar : settings.assistantAvatar; return <div className={`mini-avatar ${kind}`}>{source ? <img src={source} alt={kind === 'user' ? tr('myAvatar') : tr('assistantAvatar')}/> : kind === 'user' ? tr('you') : 'C'}</div>; };
+  const avatar = (kind: 'user' | 'assistant') => { const source = kind === 'user' ? settings.userAvatar : settings.assistantAvatar; return <div className={`mini-avatar ${kind}`}>{source ? <img src={source} alt={kind === 'user' ? tr('myAvatar') : tr('assistantAvatar')}/> : kind === 'user' ? tr('you') : settings.provider === 'kimi' ? 'K' : 'C'}</div>; };
   if (message.type === 'user') return <div className="message user-message"><div className="bubble">{message.content}</div>{avatar('user')}</div>;
   if (message.type === 'assistant') return <div className="message">{avatar('assistant')}<article className="bubble markdown"><ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown><button className="copy-small" onClick={copy} title={tr('copyReply')} aria-label={tr('copyReply')} data-tooltip={tr('copyReply')}><Copy size={14}/></button></article></div>;
   if (message.type === 'error') return <div className="message">{avatar('assistant')}<article className="bubble assistant-error">{message.content}</article></div>;
